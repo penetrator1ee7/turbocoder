@@ -12,7 +12,17 @@ def insert_errors(message, errors):
     return message
 
 
-def list_to_bits(list):
+def list_to_hex(list):
+    bits = ""
+    for block in list:
+        bits += ''.join(block)
+    while len(bits) % 16 != 0:
+        bits += '0'
+    bits = bstr.BitArray("0b" + bits).hex
+    return bits
+
+
+def list_to_bytes(list):
     bits = ""
     for block in list:
         bits += ''.join(block)
@@ -76,8 +86,10 @@ def inner_coder(message, block_length):
     return bit_array
 
 
-def inner_decoder(msg):
-    message = msg
+def inner_decoder(message, block_length):
+    bit_array = list(bstr.BitArray(hex=message).bin)
+    #bit_array = list(message)
+    message = [bit_array[i:i + block_length] for i in range(0, len(bit_array), block_length)]
     i = 0
     for block in message:
         checkbits = calculate_checkbits(block)
@@ -99,4 +111,4 @@ def inner_decoder(msg):
             block.pop(11)
         message[i] = block
         i += 1
-    return list_to_bits(message)
+    return list_to_bytes(message)

@@ -4,37 +4,47 @@ import math as m
 
 
 def main():
-    encoded_block_len = int(m.floor(m.log2(BLOCK_LEN))) + 1 + BLOCK_LEN
-    message = str(input("Insert message. \n")).encode("utf-8")
-    #message = b'Attack at dawn'
 
-    errors = input("Specify, which bits will have an error. Insert order numbers, separated by commas. "
-                   "There are " + str(len(message)*encoded_block_len) + " bits in message. \n")
-    #errors = "1,3,18,19,25,43,56,81,108"
+    mode = input("Type 'encode' to enter encoding mode or 'decode' to enter decoding mode. \n")
+    if mode == 'encode':
+        rsc = ReedSolomonCoder(int(input("Insert amount of redundant characters to Reed Solomon coder: \n")))
 
-    print(str(message) + "----- Input")
+        block_len = int(input("Insert block length to Hamming coder: \n"))
 
-    rs_encoded = rsc.encode(message)
-    print(str(rs_encoded) + "----- RS encoded")
+        message = str(input("Insert message. \n")).encode("utf-8")
 
-    hamming_encoded = inner_coder(rs_encoded, BLOCK_LEN)
-    print(str(list_to_bits(hamming_encoded)) + "----- Hamming encoded")
+        """errors = input("Specify, which bits will have an error. Insert order numbers, separated by commas. "
+                       "There are " + str(len(message)*encoded_block_len) + " bits in message. \n")"""
 
-    corrupted_message = insert_errors(hamming_encoded, errors)
-    print(str(list_to_bits(corrupted_message)) + "----- Corrupted")
+        print(str(message) + "----- Input")
 
-    hamming_decoded = inner_decoder(corrupted_message)
-    print(str(hamming_decoded) + "----- Hamming decoded")
+        rs_encoded = rsc.encode(message)
+        print(str(bytes(rs_encoded)) + "----- RS encoded")
 
-    try:
-        rs_decoded = rsc.decode(hamming_decoded)
-        print(str(rs_decoded) + "----- RS decoded")
-    except Exception:
-        print("Message cannot be decoded: Too many errors found by Chien Search.")
+        hamming_encoded = inner_coder(rs_encoded, block_len)
+        print(str(list_to_hex(hamming_encoded)) + "----- Hamming encoded")
+
+    elif mode == 'decode':
+
+        rsc = ReedSolomonCoder(int(input("Insert amount of redundant characters to Reed Solomon coder: \n")))
+
+        block_len = int(input("Insert block length to Hamming coder: \n"))
+        block_len = int(m.floor(m.log2(block_len))) + 1 + block_len
+
+        corrupted_message = '0x' + str(input("Insert message. \n")).replace(' ', '')
+
+        hamming_decoded = inner_decoder(corrupted_message, block_len)
+        print(str(hamming_decoded) + "----- Hamming decoded")
+
+        try:
+            rs_decoded = rsc.decode(hamming_decoded)
+            print(str(rs_decoded) + "----- RS decoded")
+        except Exception:
+            print("Message cannot be decoded: Too many errors found by Chien Search.")
+    else:
+        print("Incorrect mode. \n")
     return 0
 
 
 if __name__ == '__main__':
-    rsc = ReedSolomonCoder(4)
-    BLOCK_LEN = 8
     main()
